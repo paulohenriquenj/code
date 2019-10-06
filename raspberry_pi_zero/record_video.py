@@ -2,7 +2,7 @@ import picamera
 import time 
 
 
-cam = picamera.Picamera()
+cam = picamera.PiCamera()
 
 cam.start_recording('/record_files/video.h264')
 
