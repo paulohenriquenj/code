@@ -10,7 +10,7 @@ record_dir = '/record_files'
 
 file_h264 = record_dir + '/video.h264'
 
-cam.start_recording()
+cam.start_recording(file_h264)
 
 time.sleep(10)
 
