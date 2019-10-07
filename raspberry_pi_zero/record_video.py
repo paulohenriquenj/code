@@ -19,7 +19,7 @@ time.sleep(10)
 cam.stop_recording()
 
 if os.path.isfile(file_h264) :
-    cmd = f'ffmpeg -framerate 24 -i {file_h264} -c copy {file_mp4}'
+    cmd = f'ffmpeg -y -framerate 24 -i {file_h264} -c copy {file_mp4}'
     subprocess.call(cmd, shell=True)
 
 
