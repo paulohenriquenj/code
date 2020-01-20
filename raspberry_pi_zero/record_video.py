@@ -6,7 +6,7 @@ import os
 
 cam = picamera.PiCamera()
 
-record_dir = '/record_files'
+record_dir = 'record_files'
 
 file_h264 = record_dir + '/video.h264'
 
