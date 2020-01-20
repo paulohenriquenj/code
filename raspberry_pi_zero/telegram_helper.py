@@ -20,6 +20,21 @@ class telegram_helper:
 
     def get_bot_updates(self):
         updates = self.bot.get_updates()
-        print([u.message.text for u in updates])
 
-    
+        for update in updates:
+            #print(dir(update.channel_post))
+            print('------')
+            print(update.update_id)
+            print(update.message.text)
+            #print(update.channel_post.chat.id)
+            print('------')
+
+        #print(dir(updates))
+        #print([u.message.text for u in updates])
+
+    def get_channel_msg(self):
+        print(self.bot.get_updates())   
+
+
+t = telegram_helper()
+t.get_bot_updates()
