@@ -1,15 +1,20 @@
 import telegram
 import os
 from dotenv import load_dotenv
+from commands import commands
+import logging 
+
 load_dotenv()
 
 
 class telegram_helper:
 
-    def __init__(self):
+    def __init__(self, commands):
+        logging.basicConfig(level=logging.INFO)
         self.bot = telegram.Bot(token=os.getenv('TELEGRAM_TOKEN'))
         self.chat_id = os.getenv('CHAT_ID')
-        self.users = os.getenv('AUTHORIZED_USERS')
+        self.users = os.getenv('ALLOWED_USER')
+        self.command = commands
 
     def send_video(self, video_path='record_files/video.mp4'):
         ''' Send video to telegram chat '''
@@ -18,24 +23,6 @@ class telegram_helper:
             video=open('record_files/video.mp4', 'rb'),
             supports_streaming=True
         )
-
-    def get_bot_updates(self):
-        updates = self.bot.get_updates()
-
-        for update in updates:
-
-            if self.is_msg_from_authorized_user(update.message.from_user_name):
-                self.exec_command(update)
-            #print(dir(update.channel_post))
-            print('------')
-            print(update.update_id)
-            print(update.message.text)
-            print(update.username)
-            #print(update.channel_post.chat.id)
-            print('------')
-
-        #print(dir(updates))
-        #print([u.message.text for u in updates])
 
     def get_channel_msg(self):
         print(self.bot.get_updates())
@@ -50,8 +37,30 @@ class telegram_helper:
         return False
 
     def exec_command(self, update):
-        pass
+        self.command.exec(update)
+
+    def verify_updates(self):
+        updates = self.bot.get_updates()
+
+        for update in updates:
+            # print(dir(update.message.from_user))
+            # exit()
+            if self.is_msg_from_authorized_user(update.message.from_user.name):
+                logging.info('Exec command')
+                self.exec_command(update)
+            
+            #print(dir(update.channel_post))
+            print('------')
+            print(update.update_id)
+            print(update.message.text)
+            # print(update.username)
+            #print(update.channel_post.chat.id)
+            print('------')
+
+    #print(dir(updates))
+    #print([u.message.text for u in updates])
 
 
-t = telegram_helper()
-t.get_bot_updates()
+
+t = telegram_helper(commands())
+t.verify_updates()
