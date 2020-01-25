@@ -1,7 +1,6 @@
 import telegram
 import os
 from dotenv import load_dotenv
-from commands import commands
 import logging 
 
 load_dotenv()
@@ -9,58 +8,77 @@ load_dotenv()
 
 class telegram_helper:
 
-    def __init__(self, commands):
-        logging.basicConfig(level=logging.INFO)
-        self.bot = telegram.Bot(token=os.getenv('TELEGRAM_TOKEN'))
-        self.chat_id = os.getenv('CHAT_ID')
-        self.users = os.getenv('ALLOWED_USER')
-        self.command = commands
+    env_vars = ['TELEGRAM_TOKEN', 'CHAT_ID', 'ALLOWED_USER']
+    telegram_token = ''
+    chat_id = ''
+    allowed_user = ''
 
-    def send_video(self, video_path='record_files/video.mp4'):
+    def __init__(self):
+        logging.basicConfig(level=logging.INFO)
+        self.load_env_info()
+        self.bot = telegram.Bot(token=self.telegram_token)
+
+    def load_env_info(self):
+        for env_var in self.env_vars:
+            try:
+                setattr(self, env_var.lower(), os.getenv(env_var))
+            except Exception as e:
+                print(e)
+                exit()
+
+    def send_video(self, video_path):
         ''' Send video to telegram chat '''
+        logging.info('Send video')
         self.bot.send_video(
             chat_id=self.chat_id,
-            video=open('record_files/video.mp4', 'rb'),
-            supports_streaming=True
+            video=open(video_path, 'rb'),
+            supports_streaming=True,
+            timeout=120
         )
 
     def get_channel_msg(self):
         print(self.bot.get_updates())
 
     def is_msg_from_authorized_user(self, user_name):
-        if self.users == '*':
+        if self.allowed_user == '*':
             return True
         
-        if user_name in self.users:
+        if user_name in self.allowed_user:
             return True
 
         return False
 
-    def exec_command(self, update):
-        self.command.exec(update)
-
     def verify_updates(self):
         updates = self.bot.get_updates()
 
+        logging.info(f'{len(updates)} msgs found')
+
         for update in updates:
-            # print(dir(update.message.from_user))
-            # exit()
-            if self.is_msg_from_authorized_user(update.message.from_user.name):
-                logging.info('Exec command')
-                self.exec_command(update)
+            logging.debug('------')
+            logging.debug(update.update_id)
+            logging.debug(update.message.text)
+            logging.debug('------')
+
+            if self.is_msg_from_authorized_user(update.message.from_user.name) and self.is_update_msg_id_greater_than_last_executed(update):
+                logging.info ('Exec command')
+                self.write_message_id(update)
+                yield update
+
+    def is_update_msg_id_greater_than_last_executed(self, update):
+        if os.path.isfile('msg_last_executed_id'):
+            file_id = open('msg_last_executed_id', 'r')
+            content = file_id.read()
+            file_id.close()
+
+            logging.debug(f'content_id [{content}] ')
+            logging.debug(f'msg_id [{update.message.message_id}] ')
             
-            #print(dir(update.channel_post))
-            print('------')
-            print(update.update_id)
-            print(update.message.text)
-            # print(update.username)
-            #print(update.channel_post.chat.id)
-            print('------')
+            if content and  update.message.message_id > int(content):
+                return True
 
-    #print(dir(updates))
-    #print([u.message.text for u in updates])
+        return False
 
-
-
-t = telegram_helper(commands())
-t.verify_updates()
+    def write_message_id(self, update):
+        file_id = open("msg_last_executed_id", 'w')
+        file_id.write(str(update.message.message_id))
+        file_id.close()
